@@ -14,8 +14,9 @@ def generate_hash(psw):
     hash = bcrypt.hashpw(byte_psw, salt)
 
     # Converting bytes to string for storage
-    return hashed.decode('utf-8')
+    return hash.decode('utf-8')
 
+# VIDEO 2
 # Function to verify password with stored hash
 def is_valid_hash(psw, hash):
 
