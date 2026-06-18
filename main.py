@@ -1,5 +1,8 @@
 # Importing bcrypt lbrary
 import bcrypt
+import sqlite3
+
+conn = sqlite3.connect('data/project_data.db')
 
 # Function to generate a secure password hash
 def generate_hash(psw):
@@ -31,6 +34,20 @@ def is_valid_hash(psw, hash):
 
     return is_valid
 
+def create_user_table():
+    cur = conn.cursor()
+
+    sql = '''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL
+    );
+    '''
+
+    cur.execute(sql)
+    conn.commit()
+
 # Function to register a new user
 def register_user():
 
@@ -40,10 +57,17 @@ def register_user():
     # Generating hashed password using Week 1 function
     hash_password = generate_hash(password)
 
-    # Store username and hashed password in file
-    with open('users.txt', 'a') as f:
-        f.write(f'{name},{hash_password}\n')
-    print('User successfully registered!')
+    cur = conn.cursor()
+    sql = '''INSERT INTO users (username, password_hash) VALUES (?, ?)'''
+
+    try:
+        cur.execute(sql, (name, hash_password))
+        conn.commit()
+        print('User successfully registered!')
+
+    except sqlite3.IntegrityError:
+        print("Username already exists. Try another one.")
+
 
 # Function to login a user
 def login_user():
@@ -52,32 +76,25 @@ def login_user():
     name = input('Enter your name: > ')
     password = input('Enter your password: > ')
 
-    try:
-        # Opening database file in read mode
-        with open('users.txt', 'r') as f:
-            users = f.readlines()
+    cur = conn.cursor()
 
-        # Looping through each user record
-        for user in users:
-            
-            # Removing newline character and splitting username & hash
-            user_name, user_hash = user.strip().split(',')
+    sql = 'SELECT password_hash FROM users WHERE username = ?'
+    cur.execute(sql, (name,))
+    result = cur.fetchone()
 
-            # Checking username and verifying password hash
-            if name == user_name and is_valid_hash(password, user_hash):
-
-                # Successful authentication
-                return True
-        # Login fail
+    if result is None:
         return False
 
-    except FileNotFoundError:
-        # Error handling for no users existing
-        print("No users found. Please register first.")
-        return False
-    
+    stored_hash = result[0]
+
+    if is_valid_hash(password, stored_hash):
+        return True
+
+    return False
+
 def main():
 
+    create_user_table()
     # Loop runs until user exits
     while True:
 
