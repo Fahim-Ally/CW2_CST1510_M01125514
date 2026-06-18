@@ -14,7 +14,7 @@ def generate_hash(psw):
     hash = bcrypt.hashpw(byte_psw, salt)
 
     # Converting bytes to string for storage
-    return hash.decode('utf-8')
+    return hashed.decode('utf-8')
 
 # Function to verify password with stored hash
 def is_valid_hash(psw, hash):
@@ -44,7 +44,7 @@ def register_user():
         f.write(f'{name},{hash_password}\n')
     print('User successfully registered!')
 
-    # Function to login a user
+# Function to login a user
 def login_user():
 
     # Asking user for login details
