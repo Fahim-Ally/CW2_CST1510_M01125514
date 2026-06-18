@@ -1,6 +1,8 @@
 # Importing bcrypt lbrary
 import bcrypt
 import sqlite3
+import pandas as pd
+import os
 
 conn = sqlite3.connect('data/project_data.db')
 
@@ -41,7 +43,7 @@ def create_user_table():
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL
+        role TEXT NOT NULL
     );
     '''
 
@@ -91,6 +93,92 @@ def login_user():
         return True
 
     return False
+
+# Function to retrieve all users
+def get_all_users():
+
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users')
+
+    return cur.fetchall()
+
+# Function to retrieve one user
+
+def get_user(name):
+
+    cur = conn.cursor()
+    cur.execute(
+
+        'SELECT * FROM users WHERE username = ?',
+        (name,)
+
+    )
+    return cur.fetchone()
+
+# Function to update username
+
+def update_user(old_name, new_name):
+
+    cur = conn.cursor()
+    cur.execute(
+        'UPDATE users SET username = ? WHERE username = ?',
+        (new_name, old_name)
+
+    )
+
+    conn.commit()
+    print('User updated successfully!')
+
+# Function to delete user
+
+def delete_user(user_name):
+
+    cur = conn.cursor()
+    cur.execute(
+
+        'DELETE FROM users WHERE username = ?',
+        (user_name,)
+
+    )
+    conn.commit()
+    print('User deleted successfully!')
+
+# Function to migrate cyber incidents CSV
+
+def migrate_cyber_incidents():
+
+    data = pd.read_csv('data/cyber_incidents.csv')
+    data.to_sql(
+        'cyber_incidents',
+        conn,
+
+        if_exists='replace',
+        index=False
+
+    )
+
+    print('Cyber incidents migrated successfully!')
+
+# Function to migrate datasets metadata CSV
+
+def migrate_datasets_metadata():
+
+    data = pd.read_csv('data/datasets_metadata.csv')
+    data.to_sql(
+        'datasets_metadata',
+        conn,
+        if_exists='replace',
+        index=False
+
+    )
+
+    print('Datasets metadata migrated successfully!')
+
+# Function to retrieve cyber incidents table
+
+def get_all_cyber_incidents():
+    sql = 'SELECT * FROM cyber_incidents'
+    return pd.read_sql(sql, conn)
 
 def main():
 
